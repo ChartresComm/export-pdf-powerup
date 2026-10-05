@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Export PDF</title>
+  <link rel="stylesheet" href="https://p.trellocdn.com/power-up.min.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="error" class="error" hidden></div>
+
+    <label class="field">Titre du document
+      <input type="text" id="title">
+    </label>
+
+    <section>
+      <div class="head"><h3>Colonnes à exporter</h3>
+        <span><button type="button" class="link" id="lists-all">Tout</button> · <button type="button" class="link" id="lists-none">Aucune</button></span></div>
+      <div id="lists" class="checks">Chargement…</div>
+    </section>
+
+    <section>
+      <div class="head"><h3>Filtrer par support (étiquette)</h3>
+        <span><button type="button" class="link" id="labels-none">Effacer</button></span></div>
+      <p class="hint">Aucune case cochée = toutes les cartes, quelle que soit l'étiquette.</p>
+      <div id="labels" class="checks"></div>
+    </section>
+
+    <section>
+      <h3>Dates</h3>
+      <div class="row">
+        <label class="field">Du <input type="date" id="from"></label>
+        <label class="field">Au <input type="date" id="to"></label>
+      </div>
+      <label class="inline"><input type="checkbox" id="no-date" checked> Inclure les cartes sans date</label>
+      <label class="inline"><input type="checkbox" id="done" checked> Inclure les échéances terminées</label>
+    </section>
+
+    <section>
+      <h3>Mise en page</h3>
+      <div class="row">
+        <label class="field">Orientation
+          <select id="orientation"><option value="portrait">Portrait</option><option value="landscape">Paysage</option></select>
+        </label>
+        <label class="field">Organisation
+          <select id="grouping"><option value="list">Une section par colonne</option><option value="single">Un seul tableau trié par date</option></select>
+        </label>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div id="summary" class="summary"></div>
+      <button type="button" id="generate" class="mod-primary" disabled>Générer le PDF</button>
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+  <script src="./js/pdf.js"></script>
+  <script src="./js/export.js"></script>
+</body>
+</html>
