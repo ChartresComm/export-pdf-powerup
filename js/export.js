@@ -32,8 +32,11 @@
     var d = CdfPdf.prepare(state.lists, state.cards, o);
     $('summary').textContent = d.total + ' carte' + (d.total > 1 ? 's' : '') + ' dans ' + o.listIds.length + ' colonne' + (o.listIds.length > 1 ? 's' : '');
     $('generate').disabled = d.total === 0;
-    var nb = state.cards.filter(function (c) { return !c.closed && CdfPdf.extractAddress(c); }).length;
-    $('lieu-info').textContent = nb + ' carte' + (nb > 1 ? 's' : '') + ' avec une adresse détectée sur le tableau';
+    var open = state.cards.filter(function (c) { return !c.closed; });
+    var nat = open.filter(function (c) { return CdfPdf.nativeAddress(c); }).length;
+    var desc = open.filter(function (c) { return !CdfPdf.nativeAddress(c) && CdfPdf.descAddress(c); }).length;
+    var keys = open.length ? Object.keys(open[0]).filter(function (k) { return ['desc', 'address', 'locationName', 'coordinates'].indexOf(k) >= 0; }) : [];
+    $('lieu-info').textContent = (nat + desc) + ' carte(s) avec adresse (emplacement Trello : ' + nat + ', description : ' + desc + ') — champs reçus : ' + (keys.join(', ') || 'aucun');
   }
 
   function render(prefs) {
@@ -70,6 +73,16 @@
       if (typeof prefs.includeLieu === 'boolean') $('lieu').checked = prefs.includeLieu;
     }
     refresh();
+  }
+
+  // Lecture des cartes : on tente la liste complète de champs, puis des listes plus
+  // courtes si Trello en refuse une (pour ne jamais bloquer l'export).
+  var BASE_FIELDS = ['id', 'name', 'labels', 'closed', 'idList', 'url', 'due', 'dueComplete'];
+  function loadCards() {
+    return t.cards.apply(t, BASE_FIELDS.concat(['desc', 'locationName', 'address', 'coordinates']))
+      .catch(function () { return t.cards.apply(t, BASE_FIELDS.concat(['desc', 'locationName', 'address'])); })
+      .catch(function () { return t.cards.apply(t, BASE_FIELDS.concat(['desc'])); })
+      .catch(function () { return t.cards.apply(t, BASE_FIELDS); });
   }
 
   function savePrefs() {
@@ -114,7 +127,7 @@
   t.render(function () {
     return Promise.all([
       t.lists('id', 'name'),
-      t.cards('all'),
+      loadCards(),
       t.board('name'),
       t.get('member', 'private', PREFS_KEY, null)
     ]).then(function (r) {

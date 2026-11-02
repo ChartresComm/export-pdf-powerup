@@ -75,13 +75,18 @@
     return String(a.name).localeCompare(String(b.name), 'fr');
   }
 
-  // Lit la ligne « Adresse : ... » du gabarit de description (ou Lieu / Emplacement) ;
-  // repli sur l'emplacement natif de Trello s'il existe.
-  function extractAddress(card) {
+  // Adresse d'une carte : d'abord l'« Emplacement » natif de Trello (adresse postale,
+  // sinon nom du lieu), puis à défaut la ligne « Adresse : ... » de la description.
+  function nativeAddress(card) {
+    return clean((card && (card.address || card.locationName)) || '');
+  }
+  function descAddress(card) {
     var d = String((card && card.desc) || '');
     var m = /^[ \t>*_#-]*(?:adresse|lieu|emplacement)[ \t*_]*:[ \t*_]*([^\n\r]*)/im.exec(d);
-    var v = m ? clean(m[1].replace(/[*_]+/g, ' ')) : '';
-    return v || clean((card && (card.locationName || card.address)) || '');
+    return m ? clean(m[1].replace(/[*_]+/g, ' ')) : '';
+  }
+  function extractAddress(card) {
+    return nativeAddress(card) || descAddress(card);
   }
 
   function pad(n) { return ('0' + n).slice(-2); }
@@ -285,7 +290,7 @@
     return doc;
   }
 
-  var api = { extractAddress: extractAddress, clean: clean, trelloColor: trelloColor, dateKey: dateKey, fmtDate: fmtDate, labelKey: labelKey,
+  var api = { extractAddress: extractAddress, nativeAddress: nativeAddress, descAddress: descAddress, clean: clean, trelloColor: trelloColor, dateKey: dateKey, fmtDate: fmtDate, labelKey: labelKey,
     compareCards: compareCards, prepare: prepare, fileName: fileName, build: build, LIST_COLORS: LIST_COLORS };
   root.CdfPdf = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

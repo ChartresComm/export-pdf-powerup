@@ -25,6 +25,7 @@ Crée un PDF d'un tableau Trello : vous choisissez les colonnes (listes), et le 
 
 ## Utilisation
 Bouton **Export PDF** en haut du tableau → choisissez titre, colonnes, étiquettes, période, orientation → **Générer le PDF**.
+Le **adresse** (ligne « Adresse : … » du gabarit de description de la carte, ou « Lieu : … ») apparaît dans une colonne dédiée, uniquement si elle est renseignée sur au moins une carte (décochable).
 Vos choix sont mémorisés pour vos prochains exports. Les titres du PDF sont cliquables (ouvrent la carte).
 
 ## Notes
