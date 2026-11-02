@@ -198,7 +198,7 @@
       if (startY > H - 45) { doc.addPage(); startY = M; }
       var head = [];
       if (!single) head.push([{ content: sec.name + ' (' + sec.cards.length + ')', colSpan: ncols, styles: { fillColor: sec.color, textColor: textOn(sec.color), halign: 'left', fontSize: 10.5, fontStyle: 'bold', cellPadding: 2.5 } }]);
-      var hdr = ['Date', 'Titre']; if (showLieu) hdr.push('Lieu'); hdr.push('Support'); if (single) hdr.push('Liste');
+      var hdr = ['Date', 'Titre']; if (showLieu) hdr.push('Emplacement'); hdr.push('Support'); if (single) hdr.push('Liste');
       head.push(hdr);
       var body = sec.cards.map(function (c) {
         var r = [c.dueKey ? fmtDate(c.dueKey) : '—', c.name];
