@@ -101,6 +101,7 @@
       }
       kept.push({
         id: c.id, name: clean(c.name) || '(sans titre)', url: c.url || '',
+        lieu: clean(c.locationName || c.address || ''),
         due: c.due || '', dueKey: key, done: !!c.dueComplete,
         overdue: !!key && key < today && !c.dueComplete,
         labels: labels.map(function (l) {
@@ -130,7 +131,9 @@
     if (o.from || o.to) f.push('Période : ' + (o.from ? 'du ' + fmtDate(o.from).replace(/^\S+ /, '') : '') + (o.to ? ' au ' + fmtDate(o.to).replace(/^\S+ /, '') : ''));
     if (!o.includeNoDate) f.push('Cartes sans date exclues');
     if (!o.includeDone) f.push('Échéances terminées exclues');
+    var showLieu = !!o.includeLieu && kept.some(function (c) { return !!c.lieu; });
     return {
+      showLieu: showLieu,
       title: clean(o.title) || 'Export du tableau',
       subtitle: 'Exporté le ' + today.split('-').reverse().join('/') + ' à ' +
         new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).format(now) +
@@ -154,9 +157,11 @@
     var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
     var M = 12;
     var single = data.singleTable;
-    var wDate = 30, wSup = landscape ? 70 : 52, wList = landscape ? 40 : 34;
+    var showLieu = !!data.showLieu;
+    var wDate = 30, wSup = landscape ? (showLieu ? 60 : 70) : (showLieu ? 42 : 52), wList = landscape ? 40 : 34, wLieu = landscape ? 45 : 32;
     var CHIP_H = 4.6, GAP = 1.5, LGAP = 1.2, PADC = 2;
-    var ncols = single ? 4 : 3;
+    var ncols = 3 + (showLieu ? 1 : 0) + (single ? 1 : 0);
+    var iLieu = showLieu ? 2 : -1, iSup = showLieu ? 3 : 2, iList = single ? iSup + 1 : -1;
 
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor('#172b4d');
     var y = M + 6;
@@ -193,17 +198,21 @@
       if (startY > H - 45) { doc.addPage(); startY = M; }
       var head = [];
       if (!single) head.push([{ content: sec.name + ' (' + sec.cards.length + ')', colSpan: ncols, styles: { fillColor: sec.color, textColor: textOn(sec.color), halign: 'left', fontSize: 10.5, fontStyle: 'bold', cellPadding: 2.5 } }]);
-      var hdr = ['Date', 'Titre', 'Support']; if (single) hdr.push('Liste');
+      var hdr = ['Date', 'Titre']; if (showLieu) hdr.push('Lieu'); hdr.push('Support'); if (single) hdr.push('Liste');
       head.push(hdr);
       var body = sec.cards.map(function (c) {
-        var r = [c.dueKey ? fmtDate(c.dueKey) : '—', c.name, ''];
+        var r = [c.dueKey ? fmtDate(c.dueKey) : '—', c.name];
+        if (showLieu) r.push(c.lieu || '—');
+        r.push('');
         if (single) r.push(c.listName);
         return r;
       });
       if (!body.length) body.push([{ content: 'Aucune carte', colSpan: ncols, styles: { textColor: '#8993a4', fontStyle: 'italic' } }]);
       var hasCards = sec.cards.length > 0;
-      var colStyles = { 0: { cellWidth: wDate }, 1: { cellWidth: 'auto' }, 2: { cellWidth: wSup } };
-      if (single) colStyles[3] = { cellWidth: wList };
+      var colStyles = { 0: { cellWidth: wDate }, 1: { cellWidth: 'auto' } };
+      colStyles[iSup] = { cellWidth: wSup };
+      if (showLieu) colStyles[iLieu] = { cellWidth: wLieu };
+      if (single) colStyles[iList] = { cellWidth: wList };
 
       doc.autoTable({
         startY: startY, head: head, body: body, theme: 'grid',
@@ -221,7 +230,9 @@
             d.cell.styles.textColor = !c.dueKey ? '#8993a4' : (c.overdue ? '#c9372c' : '#0c66e4');
           } else if (d.column.index === 1) {
             d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = 10;
-          } else if (d.column.index === 2) {
+          } else if (d.column.index === iLieu) {
+            d.cell.styles.fontSize = 8.5; d.cell.styles.textColor = c.lieu ? '#44546f' : '#8993a4';
+          } else if (d.column.index === iSup) {
             d.cell.text = [];
             if (!c.labels.length) { d.cell.text = ['—']; d.cell.styles.textColor = '#8993a4'; }
             else {
@@ -229,7 +240,7 @@
               d.cell.chips = lay.chips;
               d.cell.styles.minCellHeight = lay.height + 2 * 2.2;
             }
-          } else if (d.column.index === 3) {
+          } else if (d.column.index === iList) {
             d.cell.styles.textColor = '#44546f'; d.cell.styles.fontSize = 8.5;
           }
         },
@@ -237,7 +248,7 @@
           if (d.section !== 'body' || !hasCards) return;
           var c = sec.cards[d.row.index]; if (!c) return;
           if (d.column.index === 1 && c.url) doc.link(d.cell.x, d.cell.y, d.cell.width, d.cell.height, { url: c.url });
-          if (d.column.index === 2 && d.cell.chips) {
+          if (d.column.index === iSup && d.cell.chips) {
             var rows = d.cell.chips.length ? d.cell.chips[d.cell.chips.length - 1].row + 1 : 0;
             var total = rows * CHIP_H + (rows - 1) * LGAP;
             var oy = d.cell.y + (d.cell.height - total) / 2;

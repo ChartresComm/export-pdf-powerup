@@ -22,7 +22,7 @@
     return {
       title: $('title').value, listIds: checked('lists'), labelKeys: checked('labels'),
       from: $('from').value, to: $('to').value,
-      includeNoDate: $('no-date').checked, includeDone: $('done').checked,
+      includeNoDate: $('no-date').checked, includeDone: $('done').checked, includeLieu: $('lieu').checked,
       grouping: $('grouping').value
     };
   }
@@ -65,6 +65,7 @@
       if (prefs.grouping) $('grouping').value = prefs.grouping;
       if (typeof prefs.includeNoDate === 'boolean') $('no-date').checked = prefs.includeNoDate;
       if (typeof prefs.includeDone === 'boolean') $('done').checked = prefs.includeDone;
+      if (typeof prefs.includeLieu === 'boolean') $('lieu').checked = prefs.includeLieu;
     }
     refresh();
   }
@@ -73,7 +74,7 @@
     var o = options();
     return t.set('member', 'private', PREFS_KEY, {
       listIds: o.listIds, knownListIds: state.lists.map(function (l) { return l.id; }), labelKeys: o.labelKeys,
-      orientation: $('orientation').value, grouping: o.grouping, includeNoDate: o.includeNoDate, includeDone: o.includeDone
+      orientation: $('orientation').value, grouping: o.grouping, includeNoDate: o.includeNoDate, includeDone: o.includeDone, includeLieu: o.includeLieu
     }).catch(function () {});
   }
 
@@ -98,7 +99,7 @@
     }, 30);
   }
 
-  ['title', 'from', 'to', 'no-date', 'done', 'grouping'].forEach(function (id) {
+  ['title', 'from', 'to', 'no-date', 'done', 'lieu', 'grouping'].forEach(function (id) {
     $(id).addEventListener('input', refresh); $(id).addEventListener('change', refresh);
   });
   $('lists').addEventListener('change', refresh);
@@ -111,7 +112,7 @@
   t.render(function () {
     return Promise.all([
       t.lists('id', 'name'),
-      t.cards('id', 'name', 'labels', 'closed', 'idList', 'url', 'due', 'dueComplete'),
+      t.cards('id', 'name', 'labels', 'closed', 'idList', 'url', 'due', 'dueComplete', 'locationName', 'address'),
       t.board('name'),
       t.get('member', 'private', PREFS_KEY, null)
     ]).then(function (r) {
