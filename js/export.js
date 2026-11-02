@@ -32,8 +32,8 @@
     var d = CdfPdf.prepare(state.lists, state.cards, o);
     $('summary').textContent = d.total + ' carte' + (d.total > 1 ? 's' : '') + ' dans ' + o.listIds.length + ' colonne' + (o.listIds.length > 1 ? 's' : '');
     $('generate').disabled = d.total === 0;
-    var nb = state.cards.filter(function (c) { return !c.closed && (c.locationName || c.address); }).length;
-    $('lieu-info').textContent = nb + ' carte' + (nb > 1 ? 's' : '') + ' avec un emplacement sur le tableau';
+    var nb = state.cards.filter(function (c) { return !c.closed && CdfPdf.extractAddress(c); }).length;
+    $('lieu-info').textContent = nb + ' carte' + (nb > 1 ? 's' : '') + ' avec une adresse détectée sur le tableau';
   }
 
   function render(prefs) {

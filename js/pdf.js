@@ -75,6 +75,15 @@
     return String(a.name).localeCompare(String(b.name), 'fr');
   }
 
+  // Lit la ligne « Adresse : ... » du gabarit de description (ou Lieu / Emplacement) ;
+  // repli sur l'emplacement natif de Trello s'il existe.
+  function extractAddress(card) {
+    var d = String((card && card.desc) || '');
+    var m = /^[ \t>*_#-]*(?:adresse|lieu|emplacement)[ \t*_]*:[ \t*_]*([^\n\r]*)/im.exec(d);
+    var v = m ? clean(m[1].replace(/[*_]+/g, ' ')) : '';
+    return v || clean((card && (card.locationName || card.address)) || '');
+  }
+
   function pad(n) { return ('0' + n).slice(-2); }
 
   function prepare(lists, cards, o) {
@@ -101,7 +110,7 @@
       }
       kept.push({
         id: c.id, name: clean(c.name) || '(sans titre)', url: c.url || '',
-        lieu: clean(c.locationName || c.address || ''),
+        lieu: extractAddress(c),
         due: c.due || '', dueKey: key, done: !!c.dueComplete,
         overdue: !!key && key < today && !c.dueComplete,
         labels: labels.map(function (l) {
@@ -198,7 +207,7 @@
       if (startY > H - 45) { doc.addPage(); startY = M; }
       var head = [];
       if (!single) head.push([{ content: sec.name + ' (' + sec.cards.length + ')', colSpan: ncols, styles: { fillColor: sec.color, textColor: textOn(sec.color), halign: 'left', fontSize: 10.5, fontStyle: 'bold', cellPadding: 2.5 } }]);
-      var hdr = ['Date', 'Titre']; if (showLieu) hdr.push('Emplacement'); hdr.push('Support'); if (single) hdr.push('Liste');
+      var hdr = ['Date', 'Titre']; if (showLieu) hdr.push('Adresse'); hdr.push('Support'); if (single) hdr.push('Liste');
       head.push(hdr);
       var body = sec.cards.map(function (c) {
         var r = [c.dueKey ? fmtDate(c.dueKey) : '—', c.name];
@@ -276,7 +285,7 @@
     return doc;
   }
 
-  var api = { clean: clean, trelloColor: trelloColor, dateKey: dateKey, fmtDate: fmtDate, labelKey: labelKey,
+  var api = { extractAddress: extractAddress, clean: clean, trelloColor: trelloColor, dateKey: dateKey, fmtDate: fmtDate, labelKey: labelKey,
     compareCards: compareCards, prepare: prepare, fileName: fileName, build: build, LIST_COLORS: LIST_COLORS };
   root.CdfPdf = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
